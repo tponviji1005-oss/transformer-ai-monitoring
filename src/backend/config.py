@@ -35,6 +35,15 @@ class Settings:
         "*",  # Allow local network ESP32 and remote clients
     ]
 
+    # Transformer Nameplate Specs (kVA, phases, power factor)
+    # Strictly unverified/unconfigured by default per user constraint.
+    # Must remain unconfigured until hardware owner in Madurai provides verified nameplate ratings.
+    TRANSFORMER_SPECS = {
+        "T1": {"rated_kVA": None, "phases": None, "rated_pf": None, "verified": False},
+        "T2": {"rated_kVA": None, "phases": None, "rated_pf": None, "verified": False},
+        "T3": {"rated_kVA": None, "phases": None, "rated_pf": None, "verified": False},
+    }
+
 
 settings = Settings()
 

@@ -5,7 +5,7 @@ Does not invent missing sensor values and keeps ambient temperature explicitly n
 """
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -168,4 +168,93 @@ class HourlyHistoryResponse(BaseModel):
     limit: int = Field(..., description="Page size limit applied")
     offset: int = Field(..., description="Page offset applied")
     records: List[HourlyTelemetryResponse] = Field(..., description="Chronological hourly aggregated records")
+
+
+class FeatureGenerateRequest(BaseModel):
+    """Optional parameters for generating live features."""
+    hour_timestamp: Optional[datetime] = Field(
+        default=None,
+        description="Target completed hour timestamp. If None, uses latest available completed hour.",
+        examples=["2026-11-03T18:00:00"],
+    )
+
+
+class FeatureVectorResponse(BaseModel):
+    """Detailed response containing the complete 39-feature vector and readiness metadata."""
+    transformer_id: str = Field(..., description="Transformer identifier")
+    hour_timestamp: datetime = Field(..., description="Timestamp of the observation hour")
+    readiness_status: str = Field(..., description="Operational readiness status")
+    is_ready_for_inference: bool = Field(..., description="True if all 39 features are non-null and valid")
+    status_reason: Optional[str] = Field(default=None, description="Diagnostics explaining why features are complete or blocked")
+    missing_features: List[str] = Field(default_factory=list, description="List of feature names that are currently None/missing")
+    features: Dict[str, Optional[float]] = Field(..., description="The authoritative 39-feature dictionary in exact model order")
+    created_at: datetime = Field(..., description="Feature vector generation timestamp")
+
+
+class FeatureReadinessResponse(BaseModel):
+    """Diagnostic response evaluating readiness for ML inference."""
+    transformer_id: str = Field(..., description="Transformer identifier")
+    hour_timestamp: Optional[str] = Field(default=None, description="Target observation hour timestamp")
+    readiness_status: str = Field(..., description="Current status code")
+    is_ready_for_inference: bool = Field(..., description="True if inference is permitted")
+    total_features_count: int = Field(default=39, description="Total features in the standard vector")
+    valid_features_count: int = Field(..., description="Count of non-null valid features")
+    missing_features_count: int = Field(..., description="Count of missing/null features")
+    missing_features: List[str] = Field(..., description="List of missing feature names")
+    status_reason: Optional[str] = Field(default=None, description="Explanatory failure reason or readiness confirmation")
+    features: Optional[Dict[str, Optional[float]]] = Field(default=None, description="Feature dictionary if generated")
+
+
+class TransformerSpecUpdateRequest(BaseModel):
+    """Request model for confirming physical transformer nameplate ratings."""
+    rated_kVA: float = Field(..., gt=0.0, description="Rated apparent power capacity in kVA", examples=[50.0])
+    phases: int = Field(default=1, ge=1, le=3, description="Phase configuration (1 or 3)", examples=[1])
+    rated_pf: float = Field(default=0.90, ge=0.1, le=1.0, description="Rated power factor", examples=[0.90])
+    verified: bool = Field(default=True, description="Explicit confirmation of verified nameplate specs")
+
+
+class PredictionRequest(BaseModel):
+    """Optional parameters for triggering next-hour inference."""
+    hour_timestamp: Optional[datetime] = Field(
+        default=None,
+        description="Target observation hour timestamp. If None, uses latest completed hour with generated features.",
+        examples=["2026-11-03T18:00:00"],
+    )
+
+
+class PredictionResponse(BaseModel):
+    """Structured response containing next-hour regression forecast and advisory alert."""
+    transformer_id: str = Field(..., description="Transformer identifier")
+    feature_hour_timestamp: datetime = Field(..., description="Timestamp of observation hour t")
+    target_hour_timestamp: datetime = Field(..., description="Timestamp of forecast hour t+1h")
+    status: str = Field(..., description="Inference status: SUCCESS or UNAVAILABLE")
+    status_reason: Optional[str] = Field(default=None, description="Diagnostic reason if unavailable or operational note")
+
+    # Forecasts (Hour t+1)
+    predicted_power_W: Optional[float] = Field(default=None, description="Predicted active power for hour t+1 in Watts")
+    predicted_load_pct: Optional[float] = Field(default=None, description="Predicted load percentage for hour t+1")
+
+    # Overload / Anomaly Signals
+    overload_probability: Optional[float] = Field(default=None, description="T2 only: predicted probability of overload in [0, 1]")
+    is_overload_predicted: Optional[bool] = Field(default=None, description="T2 only: true if overload_probability >= 0.3382")
+    anomaly_score: Optional[float] = Field(default=None, description="T1 only: anomaly risk index in [0, 1]")
+    is_anomaly_detected: Optional[bool] = Field(default=None, description="T1 only: true if out-of-distribution anomaly detected")
+
+    # Unified Advisory Alert
+    alert_level: Optional[str] = Field(default=None, description="Advisory risk level: NORMAL, WARNING, CRITICAL")
+    alert_type: Optional[str] = Field(default=None, description="Advisory alert category")
+    alert_reason: Optional[str] = Field(default=None, description="Explanation of triggered alert")
+    recommended_action: Optional[str] = Field(default=None, description="Advisory recommendations for substation operator review")
+
+    created_at: datetime = Field(..., description="Prediction generation timestamp")
+
+
+class PredictionHistoryResponse(BaseModel):
+    """Paginated collection of prediction records for a transformer."""
+    transformer_id: str = Field(..., description="Transformer identifier")
+    total_records: int = Field(..., description="Total matching prediction records available")
+    limit: int = Field(..., description="Page size limit applied")
+    offset: int = Field(..., description="Page offset applied")
+    records: List[PredictionResponse] = Field(..., description="Chronological prediction records")
+
 

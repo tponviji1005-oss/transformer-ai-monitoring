@@ -34,8 +34,22 @@ class TestHourlyAggregationService(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Initialize database tables before running tests."""
+        """Initialize database tables before running tests and clean test data."""
         init_db()
+        db = SessionLocal()
+        db.query(RawTelemetry).filter(RawTelemetry.transformer_id.like("T_%")).delete()
+        db.query(HourlyTelemetry).filter(HourlyTelemetry.transformer_id.like("T_%")).delete()
+        db.commit()
+        db.close()
+
+    @classmethod
+    def tearDownClass(cls):
+        """Clean test data after all tests finish."""
+        db = SessionLocal()
+        db.query(RawTelemetry).filter(RawTelemetry.transformer_id.like("T_%")).delete()
+        db.query(HourlyTelemetry).filter(HourlyTelemetry.transformer_id.like("T_%")).delete()
+        db.commit()
+        db.close()
 
     def setUp(self):
         """Create fresh transactional database session for each test."""
