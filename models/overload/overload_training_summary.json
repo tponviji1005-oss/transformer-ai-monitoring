@@ -1,0 +1,73 @@
+{
+  "T2_classifier": {
+    "model_file": "models\\overload\\t2_overload_classifier.joblib",
+    "train_samples": 24238,
+    "train_overloads": 170,
+    "training_time_seconds": 2.2,
+    "selected_threshold": 0.3382,
+    "default_threshold": 0.5,
+    "cv_metrics": {
+      "oof_roc_auc": 0.9924505567558585,
+      "oof_pr_auc": 0.6804161557400126,
+      "selected_threshold": 0.3382189290181109,
+      "default_threshold": 0.5,
+      "oof_recall_default": 0.7941176470588235,
+      "oof_precision_default": 0.5443548387096774,
+      "oof_f1_default": 0.645933014354067,
+      "oof_recall_selected": 0.8529411764705882,
+      "oof_precision_selected": 0.4865771812080537,
+      "oof_f1_selected": 0.6196581196581197
+    },
+    "top_10_features": [
+      {
+        "feature": "power_W",
+        "importance": 0.21232403763299407
+      },
+      {
+        "feature": "load_pct",
+        "importance": 0.19374010578406436
+      },
+      {
+        "feature": "load_lag_1h",
+        "importance": 0.09051914663489419
+      },
+      {
+        "feature": "load_rolling_max_24h",
+        "importance": 0.07905479148550607
+      },
+      {
+        "feature": "temp_gradient",
+        "importance": 0.05351519864119593
+      },
+      {
+        "feature": "temp_gradient_lag_1h",
+        "importance": 0.03962930743142631
+      },
+      {
+        "feature": "load_rolling_std_24h",
+        "importance": 0.03763034300061302
+      },
+      {
+        "feature": "load_rolling_std_168h",
+        "importance": 0.03356791020022199
+      },
+      {
+        "feature": "is_festival",
+        "importance": 0.026110536688437568
+      },
+      {
+        "feature": "load_rolling_mean_24h",
+        "importance": 0.019899598863655603
+      }
+    ]
+  },
+  "T1_anomaly_detector": {
+    "model_file": "models\\overload\\t1_anomaly_detector.joblib",
+    "train_samples": 14283,
+    "training_time_seconds": 0.38,
+    "contamination": 0.01,
+    "n_estimators": 150,
+    "train_score_min": -0.04276846789025157,
+    "train_score_max": 0.17498934353336093
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "t2_recalc": {
+    "roc_auc": 0.9145329609255033,
+    "pr_auc": 0.5462899853578077,
+    "selected_threshold": 0.3382189290181109,
+    "default": {
+      "rec": 0.40939597315436244,
+      "prec": 0.6740331491712708,
+      "f1": 0.5093945720250522,
+      "tp": 122,
+      "fp": 59,
+      "fn": 176
+    },
+    "selected": {
+      "rec": 0.6946308724832215,
+      "prec": 0.6428571428571429,
+      "f1": 0.667741935483871,
+      "tp": 207,
+      "fp": 115,
+      "fn": 91
+    },
+    "ts_cv": {
+      "roc_auc": 0.9840124019365302,
+      "pr_auc": 0.4319494366974453
+    }
+  },
+  "t1_recalc": {
+    "total_anomalies": 461,
+    "current_overloads": 121,
+    "current_caught": 112,
+    "recall_current": 0.9256198347107438,
+    "precision_current": 0.24295010845986983,
+    "f1_current": 0.3848797250859107,
+    "target_overloads": 122,
+    "target_caught": 97,
+    "recall_target": 0.7950819672131147
+  },
+  "t3_recalc": {
+    "counts": {
+      "NORMAL": 8382
+    },
+    "max_load": 78.7,
+    "max_temp": 67.1
+  }
+}

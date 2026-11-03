@@ -1,0 +1,182 @@
+{
+  "T2": {
+    "test_samples": 8117,
+    "actual_overloads": 298,
+    "roc_auc": 0.9145329609255033,
+    "pr_auc": 0.5462899853578077,
+    "default_threshold_0_5": {
+      "threshold_used": 0.5,
+      "accuracy": 0.9710484169027966,
+      "precision": 0.6740331491712708,
+      "recall": 0.40939597315436244,
+      "f1": 0.5093945720250522,
+      "roc_auc": 0.9145329609255033,
+      "pr_auc": 0.5462899853578077,
+      "confusion_matrix": {
+        "tn": 7760,
+        "fp": 59,
+        "fn": 176,
+        "tp": 122
+      },
+      "test_samples": 8117,
+      "actual_overloads": 298,
+      "predicted_overloads": 181
+    },
+    "selected_threshold": {
+      "threshold_used": 0.3382189290181109,
+      "accuracy": 0.9746211654552175,
+      "precision": 0.6428571428571429,
+      "recall": 0.6946308724832215,
+      "f1": 0.667741935483871,
+      "roc_auc": 0.9145329609255033,
+      "pr_auc": 0.5462899853578077,
+      "confusion_matrix": {
+        "tn": 7704,
+        "fp": 115,
+        "fn": 91,
+        "tp": 207
+      },
+      "test_samples": 8117,
+      "actual_overloads": 298,
+      "predicted_overloads": 322
+    }
+  },
+  "T1": {
+    "test_samples": 8341,
+    "total_anomalies_flagged": 461,
+    "anomaly_rate_pct": 5.526915237981058,
+    "current_overload_evaluation": {
+      "overload_type": "current_overload",
+      "total_samples": 8341,
+      "total_anomalies_flagged": 461,
+      "anomaly_rate_pct": 5.526915237981058,
+      "actual_overloads": 121,
+      "overloads_detected_as_anomalies": 112,
+      "overload_detection_recall": 0.9256198347107438,
+      "precision_on_overloads": 0.24295010845986983,
+      "f1_score": 0.3848797247565511,
+      "confusion_matrix": {
+        "tn": 7871,
+        "fp": 349,
+        "fn": 9,
+        "tp": 112
+      },
+      "mean_anomaly_score_overload": 0.5279431370579881,
+      "mean_anomaly_score_normal": 0.4117873371790146
+    },
+    "target_overload_evaluation": {
+      "overload_type": "target_next_hour_overload",
+      "total_samples": 8341,
+      "total_anomalies_flagged": 461,
+      "anomaly_rate_pct": 5.526915237981058,
+      "actual_overloads": 122,
+      "overloads_detected_as_anomalies": 97,
+      "overload_detection_recall": 0.7950819672131147,
+      "precision_on_overloads": 0.210412147505423,
+      "f1_score": 0.3327615777136536,
+      "confusion_matrix": {
+        "tn": 7855,
+        "fp": 364,
+        "fn": 25,
+        "tp": 97
+      },
+      "mean_anomaly_score_overload": 0.5183250504277586,
+      "mean_anomaly_score_normal": 0.41191597214300163
+    }
+  },
+  "T3": {
+    "transformer_id": "T3",
+    "total_samples": 8382,
+    "normal_count": 8382,
+    "normal_pct": 100.0,
+    "warning_count": 0,
+    "warning_pct": 0.0,
+    "critical_count": 0,
+    "critical_pct": 0.0,
+    "configured_warning_threshold": 80.0,
+    "configured_critical_threshold": 100.0
+  },
+  "unified_alerts": {
+    "T1": {
+      "total_alerts": 8341,
+      "risk_levels": {
+        "NORMAL": 7854,
+        "WARNING": 366,
+        "CRITICAL": 121
+      },
+      "risk_percentages": {
+        "NORMAL": 94.16,
+        "WARNING": 4.39,
+        "CRITICAL": 1.45
+      },
+      "alert_types": {
+        "CURRENT_OVERLOAD": 121,
+        "PREDICTED_OVERLOAD": 0,
+        "ELEVATED_LOAD_WARNING": 75,
+        "LOAD_ANOMALY": 291,
+        "NORMAL_OPERATION": 7854
+      },
+      "type_percentages": {
+        "CURRENT_OVERLOAD": 1.45,
+        "PREDICTED_OVERLOAD": 0.0,
+        "ELEVATED_LOAD_WARNING": 0.9,
+        "LOAD_ANOMALY": 3.49,
+        "NORMAL_OPERATION": 94.16
+      }
+    },
+    "T2": {
+      "total_alerts": 8117,
+      "risk_levels": {
+        "NORMAL": 6639,
+        "WARNING": 1182,
+        "CRITICAL": 296
+      },
+      "risk_percentages": {
+        "NORMAL": 81.79,
+        "WARNING": 14.56,
+        "CRITICAL": 3.65
+      },
+      "alert_types": {
+        "CURRENT_OVERLOAD": 296,
+        "PREDICTED_OVERLOAD": 49,
+        "ELEVATED_LOAD_WARNING": 1133,
+        "LOAD_ANOMALY": 0,
+        "NORMAL_OPERATION": 6639
+      },
+      "type_percentages": {
+        "CURRENT_OVERLOAD": 3.65,
+        "PREDICTED_OVERLOAD": 0.6,
+        "ELEVATED_LOAD_WARNING": 13.96,
+        "LOAD_ANOMALY": 0.0,
+        "NORMAL_OPERATION": 81.79
+      }
+    },
+    "T3": {
+      "total_alerts": 8382,
+      "risk_levels": {
+        "NORMAL": 8382,
+        "WARNING": 0,
+        "CRITICAL": 0
+      },
+      "risk_percentages": {
+        "NORMAL": 100.0,
+        "WARNING": 0.0,
+        "CRITICAL": 0.0
+      },
+      "alert_types": {
+        "CURRENT_OVERLOAD": 0,
+        "PREDICTED_OVERLOAD": 0,
+        "ELEVATED_LOAD_WARNING": 0,
+        "LOAD_ANOMALY": 0,
+        "NORMAL_OPERATION": 8382
+      },
+      "type_percentages": {
+        "CURRENT_OVERLOAD": 0.0,
+        "PREDICTED_OVERLOAD": 0.0,
+        "ELEVATED_LOAD_WARNING": 0.0,
+        "LOAD_ANOMALY": 0.0,
+        "NORMAL_OPERATION": 100.0
+      }
+    }
+  }
+}

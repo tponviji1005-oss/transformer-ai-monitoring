@@ -1,0 +1,365 @@
+{
+  "T1": {
+    "test_rows": 8341,
+    "power": {
+      "overall": {
+        "mae": 17135.725279414455,
+        "rmse": 37392.02351634814,
+        "r2": 0.7083459396059866,
+        "mape": 8726.834980823021,
+        "wmape": 27.473452069864262
+      },
+      "normal_days": {
+        "mae": 17188.804485630804,
+        "rmse": 37472.849558928654,
+        "r2": 0.7088430465340911,
+        "mape": 8805.867506833169,
+        "wmape": 27.497281416526338
+      },
+      "festival_days": {
+        "mae": 11285.689031623135,
+        "rmse": 27041.8024520935,
+        "r2": 0.464095970313278,
+        "mape": 16.396847491334178,
+        "wmape": 23.984431459809258
+      },
+      "mae_kW": 17.136,
+      "rmse_kW": 37.392
+    },
+    "load": {
+      "overall": {
+        "mae": 6.0260952991226056,
+        "rmse": 13.151073127577225,
+        "r2": 0.7100358102102109,
+        "mape": 32.944504863215826,
+        "wmape": 27.39068549651764
+      }
+    },
+    "top_features_power": [
+      {
+        "feature": "power_W",
+        "importance": 0.6116344489736245
+      },
+      {
+        "feature": "load_pct",
+        "importance": 0.19740152451238582
+      },
+      {
+        "feature": "temp_gradient",
+        "importance": 0.033004489372833616
+      },
+      {
+        "feature": "hour_sin",
+        "importance": 0.026812657588405436
+      },
+      {
+        "feature": "load_lag_1h",
+        "importance": 0.01849937669452369
+      },
+      {
+        "feature": "load_rolling_mean_168h",
+        "importance": 0.011500390766290962
+      },
+      {
+        "feature": "load_rolling_mean_24h",
+        "importance": 0.00898352892368919
+      },
+      {
+        "feature": "hour_cos",
+        "importance": 0.008604963789699788
+      },
+      {
+        "feature": "load_lag_168h",
+        "importance": 0.007705443452436374
+      },
+      {
+        "feature": "hour",
+        "importance": 0.006680915458162604
+      }
+    ],
+    "top_features_load": [
+      {
+        "feature": "power_W",
+        "importance": 0.6398106780795717
+      },
+      {
+        "feature": "load_pct",
+        "importance": 0.16933529474863984
+      },
+      {
+        "feature": "temp_gradient",
+        "importance": 0.03313395697696151
+      },
+      {
+        "feature": "hour_sin",
+        "importance": 0.026628798354688545
+      },
+      {
+        "feature": "load_lag_1h",
+        "importance": 0.01834267833889274
+      },
+      {
+        "feature": "load_rolling_mean_168h",
+        "importance": 0.011581056815028268
+      },
+      {
+        "feature": "load_rolling_mean_24h",
+        "importance": 0.008967766912192636
+      },
+      {
+        "feature": "hour_cos",
+        "importance": 0.008340752171687666
+      },
+      {
+        "feature": "load_lag_168h",
+        "importance": 0.007645540598083461
+      },
+      {
+        "feature": "hour",
+        "importance": 0.006897219783350427
+      }
+    ]
+  },
+  "T2": {
+    "test_rows": 8117,
+    "power": {
+      "overall": {
+        "mae": 22699.409863073593,
+        "rmse": 36451.31800725591,
+        "r2": 0.7510945024576069,
+        "mape": 6072.7420306468875,
+        "wmape": 15.792183635978438
+      },
+      "normal_days": {
+        "mae": 22654.60806368734,
+        "rmse": 36441.756516454254,
+        "r2": 0.7506211587453334,
+        "mape": 6129.224722984329,
+        "wmape": 15.79006230045418
+      },
+      "festival_days": {
+        "mae": 27503.357471929987,
+        "rmse": 37462.40748961497,
+        "r2": 0.7626489006060668,
+        "mape": 16.291206944107106,
+        "wmape": 15.981821670957169
+      },
+      "mae_kW": 22.699,
+      "rmse_kW": 36.451
+    },
+    "load": {
+      "overall": {
+        "mae": 7.958091037302784,
+        "rmse": 12.786064848970517,
+        "r2": 0.7538568593794097,
+        "mape": 18.227412279982182,
+        "wmape": 15.696138342406588
+      }
+    },
+    "top_features_power": [
+      {
+        "feature": "power_W",
+        "importance": 0.7089765601465035
+      },
+      {
+        "feature": "load_pct",
+        "importance": 0.05092012007297679
+      },
+      {
+        "feature": "load_lag_1h",
+        "importance": 0.029859783644230774
+      },
+      {
+        "feature": "hour",
+        "importance": 0.029386578516066263
+      },
+      {
+        "feature": "hour_sin",
+        "importance": 0.021250402253377595
+      },
+      {
+        "feature": "load_rolling_mean_168h",
+        "importance": 0.015460587194193205
+      },
+      {
+        "feature": "hour_cos",
+        "importance": 0.010978509290790748
+      },
+      {
+        "feature": "ambient_temp_lag_24h",
+        "importance": 0.01083965048020918
+      },
+      {
+        "feature": "load_rolling_std_168h",
+        "importance": 0.00945385752713129
+      },
+      {
+        "feature": "load_rolling_std_24h",
+        "importance": 0.008755119373006827
+      }
+    ],
+    "top_features_load": [
+      {
+        "feature": "power_W",
+        "importance": 0.7254276013056007
+      },
+      {
+        "feature": "load_pct",
+        "importance": 0.03446205054461225
+      },
+      {
+        "feature": "load_lag_1h",
+        "importance": 0.029838575933616888
+      },
+      {
+        "feature": "hour",
+        "importance": 0.029367179352933634
+      },
+      {
+        "feature": "hour_sin",
+        "importance": 0.022280037002146414
+      },
+      {
+        "feature": "load_rolling_mean_168h",
+        "importance": 0.015398850882372176
+      },
+      {
+        "feature": "ambient_temp_lag_24h",
+        "importance": 0.010700376024861888
+      },
+      {
+        "feature": "hour_cos",
+        "importance": 0.009858144002666923
+      },
+      {
+        "feature": "load_rolling_std_168h",
+        "importance": 0.009449668854786883
+      },
+      {
+        "feature": "load_rolling_std_24h",
+        "importance": 0.008737955661919998
+      }
+    ]
+  },
+  "T3": {
+    "test_rows": 8382,
+    "power": {
+      "overall": {
+        "mae": 6870.268095474032,
+        "rmse": 9173.56368213661,
+        "r2": 0.830016576557667,
+        "mape": 951.8068611656464,
+        "wmape": 8.029990237878168
+      },
+      "normal_days": {
+        "mae": 6863.748523545277,
+        "rmse": 9161.628734780727,
+        "r2": 0.8274529891614757,
+        "mape": 960.3262133718746,
+        "wmape": 8.041169357154299
+      },
+      "festival_days": {
+        "mae": 7592.375882302885,
+        "rmse": 10411.139816615605,
+        "r2": 0.8864983994199434,
+        "mape": 8.203410803830096,
+        "wmape": 7.0487663643956004
+      },
+      "mae_kW": 6.87,
+      "rmse_kW": 9.174
+    },
+    "load": {
+      "overall": {
+        "mae": 3.0559511413813962,
+        "rmse": 4.083153286421126,
+        "r2": 0.8295159322147889,
+        "mape": 8.607975315460926,
+        "wmape": 8.036403211256324
+      }
+    },
+    "top_features_power": [
+      {
+        "feature": "power_W",
+        "importance": 0.8626941430084545
+      },
+      {
+        "feature": "hour_sin",
+        "importance": 0.03210879165309385
+      },
+      {
+        "feature": "load_rolling_mean_24h",
+        "importance": 0.012673634423386032
+      },
+      {
+        "feature": "load_pct",
+        "importance": 0.009043758751785355
+      },
+      {
+        "feature": "load_rolling_min_24h",
+        "importance": 0.008885513677386723
+      },
+      {
+        "feature": "hour",
+        "importance": 0.0072366434113270185
+      },
+      {
+        "feature": "load_lag_24h",
+        "importance": 0.006870152985655652
+      },
+      {
+        "feature": "load_lag_1h",
+        "importance": 0.005466153781926136
+      },
+      {
+        "feature": "load_rolling_mean_168h",
+        "importance": 0.004687935331578424
+      },
+      {
+        "feature": "load_lag_168h",
+        "importance": 0.004504851588455467
+      }
+    ],
+    "top_features_load": [
+      {
+        "feature": "power_W",
+        "importance": 0.8633436154915646
+      },
+      {
+        "feature": "hour_sin",
+        "importance": 0.03207988057501783
+      },
+      {
+        "feature": "load_rolling_mean_24h",
+        "importance": 0.012636329829685732
+      },
+      {
+        "feature": "load_rolling_min_24h",
+        "importance": 0.008887661278691726
+      },
+      {
+        "feature": "load_pct",
+        "importance": 0.008431748873697744
+      },
+      {
+        "feature": "hour",
+        "importance": 0.007299536080425577
+      },
+      {
+        "feature": "load_lag_24h",
+        "importance": 0.006839174441229039
+      },
+      {
+        "feature": "load_lag_1h",
+        "importance": 0.005500409278498528
+      },
+      {
+        "feature": "load_rolling_mean_168h",
+        "importance": 0.004718331507871619
+      },
+      {
+        "feature": "load_lag_168h",
+        "importance": 0.004488209629591106
+      }
+    ]
+  }
+}

@@ -1,0 +1,230 @@
+{
+  "T1": {
+    "power": {
+      "model_file": "models\\t1_rf_power.joblib",
+      "target_column": "target_next_hour_power_W",
+      "train_rows": 14283,
+      "train_seconds": 5.15,
+      "train_r2": 0.9771,
+      "parameters": {
+        "n_estimators": 100,
+        "max_depth": 20,
+        "min_samples_split": 4,
+        "min_samples_leaf": 2,
+        "random_state": 42,
+        "n_jobs": -1
+      },
+      "top_5_features": [
+        {
+          "feature": "power_W",
+          "importance": 0.6116344489736245
+        },
+        {
+          "feature": "load_pct",
+          "importance": 0.19740152451238582
+        },
+        {
+          "feature": "temp_gradient",
+          "importance": 0.033004489372833616
+        },
+        {
+          "feature": "hour_sin",
+          "importance": 0.026812657588405436
+        },
+        {
+          "feature": "load_lag_1h",
+          "importance": 0.01849937669452369
+        }
+      ]
+    },
+    "load": {
+      "model_file": "models\\t1_rf_load.joblib",
+      "target_column": "target_next_hour_load_pct",
+      "train_rows": 14283,
+      "train_seconds": 8.51,
+      "train_r2": 0.9772,
+      "parameters": {
+        "n_estimators": 100,
+        "max_depth": 20,
+        "min_samples_split": 4,
+        "min_samples_leaf": 2,
+        "random_state": 42,
+        "n_jobs": -1
+      },
+      "top_5_features": [
+        {
+          "feature": "power_W",
+          "importance": 0.6398106780795717
+        },
+        {
+          "feature": "load_pct",
+          "importance": 0.16933529474863984
+        },
+        {
+          "feature": "temp_gradient",
+          "importance": 0.03313395697696151
+        },
+        {
+          "feature": "hour_sin",
+          "importance": 0.026628798354688545
+        },
+        {
+          "feature": "load_lag_1h",
+          "importance": 0.01834267833889274
+        }
+      ]
+    }
+  },
+  "T2": {
+    "power": {
+      "model_file": "models\\t2_rf_power.joblib",
+      "target_column": "target_next_hour_power_W",
+      "train_rows": 24238,
+      "train_seconds": 16.01,
+      "train_r2": 0.9693,
+      "parameters": {
+        "n_estimators": 100,
+        "max_depth": 20,
+        "min_samples_split": 4,
+        "min_samples_leaf": 2,
+        "random_state": 42,
+        "n_jobs": -1
+      },
+      "top_5_features": [
+        {
+          "feature": "power_W",
+          "importance": 0.7089765601465035
+        },
+        {
+          "feature": "load_pct",
+          "importance": 0.05092012007297679
+        },
+        {
+          "feature": "load_lag_1h",
+          "importance": 0.029859783644230774
+        },
+        {
+          "feature": "hour",
+          "importance": 0.029386578516066263
+        },
+        {
+          "feature": "hour_sin",
+          "importance": 0.021250402253377595
+        }
+      ]
+    },
+    "load": {
+      "model_file": "models\\t2_rf_load.joblib",
+      "target_column": "target_next_hour_load_pct",
+      "train_rows": 24238,
+      "train_seconds": 15.28,
+      "train_r2": 0.9693,
+      "parameters": {
+        "n_estimators": 100,
+        "max_depth": 20,
+        "min_samples_split": 4,
+        "min_samples_leaf": 2,
+        "random_state": 42,
+        "n_jobs": -1
+      },
+      "top_5_features": [
+        {
+          "feature": "power_W",
+          "importance": 0.7254276013056007
+        },
+        {
+          "feature": "load_pct",
+          "importance": 0.03446205054461225
+        },
+        {
+          "feature": "load_lag_1h",
+          "importance": 0.029838575933616888
+        },
+        {
+          "feature": "hour",
+          "importance": 0.029367179352933634
+        },
+        {
+          "feature": "hour_sin",
+          "importance": 0.022280037002146414
+        }
+      ]
+    }
+  },
+  "T3": {
+    "power": {
+      "model_file": "models\\t3_rf_power.joblib",
+      "target_column": "target_next_hour_power_W",
+      "train_rows": 24390,
+      "train_seconds": 13.3,
+      "train_r2": 0.9824,
+      "parameters": {
+        "n_estimators": 100,
+        "max_depth": 20,
+        "min_samples_split": 4,
+        "min_samples_leaf": 2,
+        "random_state": 42,
+        "n_jobs": -1
+      },
+      "top_5_features": [
+        {
+          "feature": "power_W",
+          "importance": 0.8626941430084545
+        },
+        {
+          "feature": "hour_sin",
+          "importance": 0.03210879165309385
+        },
+        {
+          "feature": "load_rolling_mean_24h",
+          "importance": 0.012673634423386032
+        },
+        {
+          "feature": "load_pct",
+          "importance": 0.009043758751785355
+        },
+        {
+          "feature": "load_rolling_min_24h",
+          "importance": 0.008885513677386723
+        }
+      ]
+    },
+    "load": {
+      "model_file": "models\\t3_rf_load.joblib",
+      "target_column": "target_next_hour_load_pct",
+      "train_rows": 24390,
+      "train_seconds": 15.48,
+      "train_r2": 0.9824,
+      "parameters": {
+        "n_estimators": 100,
+        "max_depth": 20,
+        "min_samples_split": 4,
+        "min_samples_leaf": 2,
+        "random_state": 42,
+        "n_jobs": -1
+      },
+      "top_5_features": [
+        {
+          "feature": "power_W",
+          "importance": 0.8633436154915646
+        },
+        {
+          "feature": "hour_sin",
+          "importance": 0.03207988057501783
+        },
+        {
+          "feature": "load_rolling_mean_24h",
+          "importance": 0.012636329829685732
+        },
+        {
+          "feature": "load_rolling_min_24h",
+          "importance": 0.008887661278691726
+        },
+        {
+          "feature": "load_pct",
+          "importance": 0.008431748873697744
+        }
+      ]
+    }
+  }
+}
