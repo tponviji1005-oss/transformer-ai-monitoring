@@ -1,0 +1,88 @@
+{
+  "test_start_time": "2026-11-06T13:42:14.046450+00:00",
+  "workflow_steps": {
+    "ingestion": {
+      "status": "PASSED",
+      "single_status": 201,
+      "duplicate_status": 200,
+      "batch_inserted": 10,
+      "raw_records_inserted": 11
+    },
+    "hourly_aggregation": {
+      "status": "PASSED",
+      "records_created": 1,
+      "reading_count": 11,
+      "ambient_is_null": true
+    },
+    "model_inference": {
+      "status": "PASSED",
+      "target_hour": "2026-11-08T00:00:00",
+      "outputs": {
+        "T1": {
+          "predicted_power_W": 51630.65,
+          "predicted_load_pct": 18.64,
+          "overload_prob": null,
+          "anomaly_score": 0.4737,
+          "alert_level": "NORMAL",
+          "alert_type": "NORMAL_OPERATION"
+        },
+        "T2": {
+          "predicted_power_W": 31018.17,
+          "predicted_load_pct": 11.51,
+          "overload_prob": 0.0,
+          "anomaly_score": null,
+          "alert_level": "NORMAL",
+          "alert_type": "NORMAL_OPERATION"
+        },
+        "T3": {
+          "predicted_power_W": 31251.39,
+          "predicted_load_pct": 14.14,
+          "overload_prob": null,
+          "anomaly_score": null,
+          "alert_level": "NORMAL",
+          "alert_type": "NORMAL_OPERATION"
+        }
+      }
+    },
+    "alert_engine": {
+      "status": "PASSED",
+      "high_load_alert_level": "CRITICAL",
+      "high_load_alert_type": "CURRENT_OVERLOAD",
+      "recommended_action": "Notify the substation operator for advisory review. Recommend manual feeder inspection and assessment of load redistribution options, following approved operating procedures."
+    }
+  },
+  "validations": {
+    "missing_sensor_and_nameplate_gating": {
+      "status": "PASSED",
+      "inference_status": "UNAVAILABLE",
+      "status_reason": "Ambient temperature channel is missing/unconfigured (affects 6 features). Never substitute oil temperature. | Transformer nameplate capacity is unverified/unconfigured. Load percentage cannot be calculated. | Insufficient historical telemetry (<168 hours of continuous uptime). Cold-start buffer is accumulating. | Missing-hour gap detected in historical telemetry. Lags cannot be computed across gaps.",
+      "no_fabricated_power": true,
+      "no_fabricated_load": true
+    },
+    "festival_and_timezone": {
+      "status": "PASSED",
+      "diwali_detected": true,
+      "ist_timezone_applied": true
+    }
+  },
+  "database_verification": {
+    "prod_db_before": {
+      "raw_telemetry": 5,
+      "hourly_telemetry": 169
+    },
+    "prod_db_after": {
+      "raw_telemetry": 5,
+      "hourly_telemetry": 169
+    },
+    "isolation_preserved": true
+  },
+  "failed_cases": [],
+  "hardware_confirmation_issues": [
+    "Transformer official rated kVA capacity (T1, T2, T3) must be verified by hardware partner in Madurai.",
+    "PZEM-004T CT clamp current direction arrow must point towards transformer load.",
+    "MAX6675 thermocouple must be mounted in top oil thermowell with thermal grease.",
+    "Second physical sensor for ambient temperature is not yet wired to hardware (firmware reports null).",
+    "Network reachability and backend host IP must be configured in firmware config.h."
+  ],
+  "test_end_time": "2026-11-06T13:42:15.587026+00:00"
+}

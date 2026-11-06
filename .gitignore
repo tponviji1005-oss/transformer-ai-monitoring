@@ -24,6 +24,16 @@ __pycache__/
 *.db-journal
 *.db-wal
 *.db-shm
+data/backups/
+data/simulation_*.db
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+!.env.production.example
+firmware/config.h
+!firmware/config.h.example
 
 # IDE & OS files
 .vscode/

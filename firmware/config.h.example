@@ -1,0 +1,73 @@
+/**
+ * @file config.h.example
+ * @brief Configuration template for ESP32 Transformer AI Monitoring Firmware.
+ *
+ * INSTRUCTIONS:
+ * 1. Copy this file to 'config.h':
+ *    cp firmware/config.h.example firmware/config.h
+ * 2. Update Wi-Fi credentials, backend URL, and API key.
+ * 3. Never commit 'config.h' with real credentials to GitHub.
+ */
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// ====================================================================
+// Transformer Identification
+// ====================================================================
+// Must be one of "T1", "T2", or "T3" matching the physical transformer.
+#define TRANSFORMER_ID "T1"
+
+// ====================================================================
+// Wi-Fi Network Credentials
+// ====================================================================
+#define WIFI_SSID "YOUR_WIFI_SSID"
+#define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
+#define WIFI_CONNECT_TIMEOUT_MS 20000
+
+// ====================================================================
+// Backend REST API Configuration
+// ====================================================================
+// For local testing on same network: use PC's LAN IP (e.g., "192.168.1.50")
+// For remote/cloud testing: use Cloudflare Tunnel URL or cloud domain.
+// IMPORTANT: Do NOT use "localhost" or "127.0.0.1" (ESP32 cannot resolve them).
+#define BACKEND_HOST "192.168.1.50"
+#define BACKEND_PORT 8000
+#define INGEST_URL "/api/telemetry/ingest"
+#define BATCH_INGEST_URL "/api/telemetry/ingest-batch"
+
+// Secret Device API Key for X-Device-API-Key header authentication
+// Must match DEVICE_API_KEY configured in backend .env
+#define DEVICE_API_KEY "dev-transformer-secret-key-change-in-prod"
+
+// ====================================================================
+// Hardware Pin Assignments (Confirmed DOIT DEVKIT V1 38-Pin)
+// ====================================================================
+// Single-phase PZEM-004T V4.0 (Hardware Serial UART2)
+#define PZEM_RX_PIN 16  // ESP32 RX2 connects to PZEM TX
+#define PZEM_TX_PIN 17  // ESP32 TX2 connects to PZEM RX
+
+// MAX6675 Cold-Junction Compensated K-Thermocouple (SPI)
+#define MAX6675_SCK_PIN 18  // SPI Serial Clock
+#define MAX6675_CS_PIN   5  // Chip Select
+#define MAX6675_SO_PIN  19  // SPI Serial Out (MISO)
+
+// ====================================================================
+// Timing & Buffer Constraints
+// ====================================================================
+#define SENSOR_READ_INTERVAL_MS 2000  // 2 seconds between observations
+#define HTTP_TIMEOUT_MS         5000  // HTTP request timeout
+#define AUTH_BACKOFF_MS        60000  // 60-second backoff on HTTP 401 Unauthorized
+
+/**
+ * RAM RING BUFFER LIMITATION:
+ * The ESP32 retains up to 60 readings in RAM ring buffer during network disconnects.
+ * At 2-second sampling intervals:
+ *   60 readings * 2 seconds = 120 seconds (2.0 minutes of continuous offline telemetry).
+ * If Wi-Fi outage exceeds 2 minutes, oldest readings are overwritten (FIFO)
+ * to prevent heap memory exhaustion and microcontroller crashes.
+ */
+#define RING_BUFFER_CAPACITY 60
+
+#endif // CONFIG_H
+

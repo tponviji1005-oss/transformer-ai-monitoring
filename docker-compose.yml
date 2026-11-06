@@ -1,0 +1,30 @@
+services:
+  transformer-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transformer-ai-monitoring
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.production
+    environment:
+      APP_ENV: production
+      DEVICE_API_KEY: "${DEVICE_API_KEY:?Error: DEVICE_API_KEY must be set in environment or .env.production}"
+      DATABASE_URL: sqlite:////app/data/transformer_monitoring.db
+      SCHEDULER_ENABLED: "true"
+      SCHEDULER_CHECK_INTERVAL_SECONDS: 60
+      SCHEDULER_GRACE_PERIOD_MINUTES: 5
+      SCHEDULER_LOCK_TIMEOUT_MINUTES: 15
+      DEBUG: "false"
+    volumes:
+      # Persistent host volume mount for SQLite WAL database
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+

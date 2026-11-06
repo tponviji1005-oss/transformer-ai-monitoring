@@ -9,8 +9,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 import json
 import logging
+import os
+import secrets
 from typing import AsyncGenerator, Optional
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -29,6 +31,8 @@ from src.backend.schemas import (
     PredictionHistoryResponse,
     PredictionRequest,
     PredictionResponse,
+    TelemetryBatchIngestRequest,
+    TelemetryBatchIngestResponse,
     TelemetryIngestRequest,
     TelemetryIngestResponse,
     TransformerSpecUpdateRequest,
@@ -49,14 +53,63 @@ from src.backend.inference_service import (
     get_latest_prediction,
     get_prediction_history,
 )
+from src.backend.scheduler import background_scheduler
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("transformer_backend")
 
-
 # Initialize database tables on module import
 init_db()
+
+
+def verify_device_api_key(
+    x_device_api_key: Optional[str] = Header(None, alias="X-Device-API-Key"),
+) -> str:
+    """
+    Verifies that incoming requests contain a valid X-Device-API-Key header.
+    Rejects unauthorized access with HTTP 401.
+    Uses constant-time comparison via secrets.compare_digest.
+    Fails safely if DEVICE_API_KEY is missing or empty in configuration.
+    """
+    configured_key = (settings.DEVICE_API_KEY or "").strip()
+    if not configured_key:
+        logger.error("Authentication rejected: DEVICE_API_KEY is missing or empty on the server.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed: server has no valid DEVICE_API_KEY configured.",
+            headers={"WWW-Authenticate": "ApiKey"},
+        )
+
+    if not x_device_api_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing X-Device-API-Key header: Missing required X-Device-API-Key header.",
+            headers={"WWW-Authenticate": "ApiKey"},
+        )
+
+    if not secrets.compare_digest(x_device_api_key.encode("utf-8"), configured_key.encode("utf-8")):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid X-Device-API-Key header.",
+            headers={"WWW-Authenticate": "ApiKey"},
+        )
+
+    return x_device_api_key
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Application lifespan context: validates configuration on startup."""
+    # Startup validation: enforce security rules in production
+    settings.validate_security_configuration()
+    if settings.SCHEDULER_ENABLED:
+        background_scheduler.start()
+    yield
+    # Shutdown handling
+    if background_scheduler._running:
+        background_scheduler.stop()
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -64,6 +117,7 @@ app = FastAPI(
     description="REST API for remote ESP32 transformer telemetry ingestion and monitoring.",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # Configure CORS for local development, web dashboards, and ESP32 clients
@@ -83,8 +137,10 @@ def root_info() -> dict:
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "docs": "/docs",
+        "dashboard": "/dashboard",
         "health": f"{settings.API_PREFIX}/health",
         "ingest": f"{settings.API_PREFIX}/telemetry/ingest",
+        "ingest_batch": f"{settings.API_PREFIX}/telemetry/ingest-batch",
         "aggregation_run": f"{settings.API_PREFIX}/aggregation/run",
         "aggregation_history": f"{settings.API_PREFIX}/aggregation/{{transformer_id}}/history",
         "feature_generate": f"{settings.API_PREFIX}/features/{{transformer_id}}/generate",
@@ -135,19 +191,45 @@ def get_health_status(db: Session = Depends(get_db)) -> HealthResponse:
 )
 def ingest_raw_telemetry(
     payload: TelemetryIngestRequest,
+    response: Response = Response(),
     db: Session = Depends(get_db),
+    api_key: Optional[str] = Depends(verify_device_api_key),
 ) -> TelemetryIngestResponse:
     """
     Ingests, validates, and stores a raw 2-second telemetry reading from the ESP32.
     
     Data Handling Policy:
+    - Verifies device API key via X-Device-API-Key header.
+    - Idempotent deduplication: if reading_id is already present, returns HTTP 200 without inserting duplicate.
     - Stores exact physical measurements with timestamp.
     - If ambient_temperature_C is null/missing, it is strictly stored as NULL.
     - Ambient temperature is never substituted with oil temperature.
     - Does not aggregate readings or calculate load percentage at this stage.
     """
     try:
+        # Atomic deduplication check
+        if payload.reading_id:
+            existing = (
+                db.query(RawTelemetry)
+                .filter(RawTelemetry.reading_id == payload.reading_id)
+                .first()
+            )
+            if existing is not None:
+                if response is not None:
+                    response.status_code = status.HTTP_200_OK
+                return TelemetryIngestResponse(
+                    status="duplicate",
+                    message=f"Duplicate reading {payload.reading_id} already recorded.",
+                    record_id=existing.id,
+                    transformer_id=existing.transformer_id,
+                    timestamp=existing.timestamp,
+                    reading_id=existing.reading_id,
+                    ambient_temperature_supplied=existing.ambient_temperature_C is not None,
+                )
+
         record = RawTelemetry(
+            reading_id=payload.reading_id,
+            sequence_number=payload.sequence_number,
             transformer_id=payload.transformer_id,
             timestamp=payload.timestamp,
             voltage_V=payload.voltage_V,
@@ -171,6 +253,7 @@ def ingest_raw_telemetry(
             record_id=record.id,
             transformer_id=record.transformer_id,
             timestamp=record.timestamp,
+            reading_id=record.reading_id,
             ambient_temperature_supplied=ambient_supplied,
         )
     except Exception as exc:
@@ -179,6 +262,74 @@ def ingest_raw_telemetry(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database persistence failure: {str(exc)}",
+        )
+
+
+@app.post(
+    f"{settings.API_PREFIX}/telemetry/ingest-batch",
+    response_model=TelemetryBatchIngestResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["Telemetry"],
+    summary="Batch Ingest ESP32 Sensor Observations (Buffer Flush)",
+)
+def ingest_batch_telemetry(
+    payload: TelemetryBatchIngestRequest,
+    db: Session = Depends(get_db),
+    api_key: Optional[str] = Depends(verify_device_api_key),
+) -> TelemetryBatchIngestResponse:
+    """
+    Ingests a chronological batch of telemetry readings from the ESP32 ring buffer.
+    Performs atomic per-reading deduplication, ensuring network reconnect flushes
+    do not insert duplicate records.
+    """
+    inserted_ids = []
+    duplicate_count = 0
+
+    try:
+        for item in payload.readings:
+            if item.reading_id:
+                existing = (
+                    db.query(RawTelemetry)
+                    .filter(RawTelemetry.reading_id == item.reading_id)
+                    .first()
+                )
+                if existing is not None:
+                    duplicate_count += 1
+                    continue
+
+            record = RawTelemetry(
+                reading_id=item.reading_id,
+                sequence_number=item.sequence_number,
+                transformer_id=item.transformer_id,
+                timestamp=item.timestamp,
+                voltage_V=item.voltage_V,
+                current_A=item.current_A,
+                power_W=item.power_W,
+                energy=item.energy,
+                frequency_Hz=item.frequency_Hz,
+                power_factor=item.power_factor,
+                oil_temperature_C=item.oil_temperature_C,
+                ambient_temperature_C=item.ambient_temperature_C,
+            )
+            db.add(record)
+            db.flush()
+            inserted_ids.append(record.id)
+
+        db.commit()
+
+        return TelemetryBatchIngestResponse(
+            status="success",
+            total_received=len(payload.readings),
+            inserted_count=len(inserted_ids),
+            duplicate_count=duplicate_count,
+            record_ids=inserted_ids,
+        )
+    except Exception as exc:
+        db.rollback()
+        logger.error(f"Failed to persist batch telemetry: {exc}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Batch persistence failure: {str(exc)}",
         )
 
 
@@ -539,4 +690,21 @@ def get_prediction_history_endpoint(
         offset=offset,
         records=items,
     )
+
+
+# Mount compiled React dashboard if dist directory exists
+frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"))
+if os.path.exists(frontend_dist):
+    import os
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
+
+    assets_dir = os.path.join(frontend_dist, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/dashboard", tags=["Frontend"])
+    def serve_dashboard():
+        """Serves the React Monitoring & Predictive Maintenance Dashboard."""
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
 

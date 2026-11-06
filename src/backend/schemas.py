@@ -14,6 +14,18 @@ class TelemetryIngestRequest(BaseModel):
     Validation schema for incoming ESP32 sensor observations.
     Accepts raw 2-second telemetry packets from remote microcontrollers.
     """
+    reading_id: Optional[str] = Field(
+        default=None,
+        description="Unique ESP32 reading identifier (<transformer_id>-<boot_id>-<seq>)",
+        examples=["T2-B94A7C10-00000042"],
+        max_length=64,
+    )
+    sequence_number: Optional[int] = Field(
+        default=None,
+        description="Monotonically increasing sequence number per boot session",
+        examples=[42],
+        ge=1,
+    )
     transformer_id: str = Field(
         ...,
         description="Transformer identifier (e.g. 'T1', 'T2', 'T3')",
@@ -93,15 +105,35 @@ class TelemetryIngestRequest(BaseModel):
 
 class TelemetryIngestResponse(BaseModel):
     """Structured response returned upon successful raw telemetry ingestion."""
-    status: str = Field(default="success", description="Ingestion status indicator")
+    status: str = Field(default="success", description="Ingestion status indicator ('success' or 'duplicate')")
     message: str = Field(..., description="Human-readable status summary")
-    record_id: int = Field(..., description="Unique auto-incremented database record ID")
+    record_id: Optional[int] = Field(default=None, description="Unique database record ID (None if duplicate)")
     transformer_id: str = Field(..., description="Normalized transformer identifier")
     timestamp: datetime = Field(..., description="Original measurement timestamp recorded")
+    reading_id: Optional[str] = Field(default=None, description="ESP32 reading identifier recorded")
     ambient_temperature_supplied: bool = Field(
         ...,
         description="Explicit indicator whether physical ambient temperature was supplied or remains null"
     )
+
+
+class TelemetryBatchIngestRequest(BaseModel):
+    """Schema for micro-batch telemetry ingestion from ESP32 buffer flush."""
+    readings: List[TelemetryIngestRequest] = Field(
+        ...,
+        description="List of telemetry readings to ingest in chronological order",
+        min_length=1,
+        max_length=120,
+    )
+
+
+class TelemetryBatchIngestResponse(BaseModel):
+    """Structured response for batch telemetry ingestion."""
+    status: str = Field(default="success", description="Overall batch ingestion status")
+    total_received: int = Field(..., description="Total readings received in batch")
+    inserted_count: int = Field(..., description="Number of newly inserted readings")
+    duplicate_count: int = Field(..., description="Number of duplicate readings acknowledged")
+    record_ids: List[int] = Field(default_factory=list, description="IDs of newly inserted records")
 
 
 class HealthResponse(BaseModel):

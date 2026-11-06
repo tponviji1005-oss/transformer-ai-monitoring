@@ -449,6 +449,39 @@ def extract_rolling_windows(
     }
 
 
+def identify_affected_downstream_timestamps(
+    db: Session,
+    transformer_id: str,
+    modified_hour: datetime,
+) -> List[datetime]:
+    """
+    Identifies all future feature timestamps affected when hour H is modified:
+    - Target hour H itself: direct sensor measurements (power, temp, voltage, current) changed.
+    - 1-hour lag: H + 1h
+    - 24-hour lag: H + 24h
+    - 168-hour lag: H + 168h
+    - 24-hour rolling window [T-24h, T-1h]: includes H for all T in [H+1h, H+24h]
+    - 168-hour rolling window [T-168h, T-1h]: includes H for all T in [H+1h, H+168h]
+    - Thermal gradient lag: H + 1h
+    
+    Returns all existing hourly timestamps in [H, H + 168h] in strictly ascending chronological order.
+    """
+    tid = transformer_id.strip().upper()
+    h_clean = modified_hour.replace(minute=0, second=0, microsecond=0, tzinfo=None)
+    max_affected = h_clean + timedelta(hours=168)
+
+    query = (
+        select(HourlyTelemetry.hour_start)
+        .where(
+            HourlyTelemetry.transformer_id == tid,
+            HourlyTelemetry.hour_start >= h_clean,
+            HourlyTelemetry.hour_start <= max_affected,
+        )
+        .order_by(HourlyTelemetry.hour_start.asc())
+    )
+    return list(db.execute(query).scalars().all())
+
+
 def generate_live_features(
     db: Session,
     transformer_id: str,

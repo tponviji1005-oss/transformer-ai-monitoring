@@ -16,6 +16,7 @@ from sqlalchemy import (
     UniqueConstraint,
     create_engine,
     event,
+    text,
 )
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
@@ -54,6 +55,8 @@ class RawTelemetry(Base):
     __tablename__ = "raw_telemetry"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    reading_id = Column(String(64), index=True, nullable=True)  # Unique ESP32 reading identifier: <transformer_id>-<boot_id>-<seq>
+    sequence_number = Column(Integer, nullable=True)             # Monotonically increasing counter per boot session
     transformer_id = Column(String(20), index=True, nullable=False)
     timestamp = Column(DateTime, index=True, nullable=False)
     voltage_V = Column(Float, nullable=False)
@@ -70,6 +73,8 @@ class RawTelemetry(Base):
         """Converts model instance to dictionary representation."""
         return {
             "id": self.id,
+            "reading_id": self.reading_id,
+            "sequence_number": self.sequence_number,
             "transformer_id": self.transformer_id,
             "timestamp": self.timestamp.isoformat() if self.timestamp else None,
             "voltage_V": self.voltage_V,
@@ -303,9 +308,93 @@ class PredictionRecord(Base):
         }
 
 
+class SchedulerLock(Base):
+    """
+    Distributed lock table to ensure atomic execution of hourly background jobs.
+    Prevents concurrent worker executions and enables 15-minute stale-lock crash recovery.
+    Includes a monotonically increasing fencing_token to fence off stale workers.
+    """
+    __tablename__ = "scheduler_locks"
+
+    job_name = Column(String(64), primary_key=True)
+    target_hour = Column(String(32), primary_key=True)
+    worker_pid = Column(String(64), nullable=False)
+    status = Column(String(20), default="IN_PROGRESS", nullable=False)  # IN_PROGRESS, COMPLETED, FAILED
+    fencing_token = Column(Integer, default=1, nullable=False)
+    locked_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
+    completed_at = Column(DateTime, nullable=True)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "job_name": self.job_name,
+            "target_hour": self.target_hour,
+            "worker_pid": self.worker_pid,
+            "status": self.status,
+            "fencing_token": self.fencing_token,
+            "locked_at": self.locked_at.isoformat() if self.locked_at else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+        }
+
+
+def run_safe_migrations(target_engine=None) -> Dict[str, Any]:
+    """
+    Applies non-destructive database migrations.
+    - Inspects existing tables using SQLite PRAGMAs.
+    - Safely adds 'reading_id' and 'sequence_number' columns to raw_telemetry if missing.
+    - Creates partial unique index on raw_telemetry(reading_id) WHERE reading_id IS NOT NULL.
+    - Creates scheduler_locks table if missing.
+    - Preserves 100% of existing raw telemetry, hourly aggregation, feature, and prediction records.
+    """
+    eng = target_engine or engine
+    results = {"columns_added": [], "indexes_created": [], "tables_created": []}
+
+    # Ensure all tables defined in Base metadata are created
+    Base.metadata.create_all(bind=eng)
+
+    if eng.url.drivername.startswith("sqlite"):
+        with eng.connect() as conn:
+            # Check raw_telemetry columns
+            rows = conn.execute(text("PRAGMA table_info(raw_telemetry)")).fetchall()
+            columns = [col[1] for col in rows]
+
+            if "reading_id" not in columns:
+                conn.execute(text("ALTER TABLE raw_telemetry ADD COLUMN reading_id VARCHAR(64)"))
+                conn.commit()
+                results["columns_added"].append("raw_telemetry.reading_id")
+
+            if "sequence_number" not in columns:
+                conn.execute(text("ALTER TABLE raw_telemetry ADD COLUMN sequence_number INTEGER"))
+                conn.commit()
+                results["columns_added"].append("raw_telemetry.sequence_number")
+
+            # Check if index already exists before attempting creation
+            idx_rows = conn.execute(text("PRAGMA index_list(raw_telemetry)")).fetchall()
+            idx_names = [r[1] for r in idx_rows]
+            if "idx_raw_telemetry_reading_id" not in idx_names:
+                conn.execute(
+                    text(
+                        "CREATE UNIQUE INDEX idx_raw_telemetry_reading_id "
+                        "ON raw_telemetry(reading_id) WHERE reading_id IS NOT NULL"
+                    )
+                )
+                conn.commit()
+                results["indexes_created"].append("idx_raw_telemetry_reading_id")
+
+            # Check scheduler_locks columns for fencing_token
+            lock_rows = conn.execute(text("PRAGMA table_info(scheduler_locks)")).fetchall()
+            lock_columns = [col[1] for col in lock_rows]
+            if "fencing_token" not in lock_columns:
+                conn.execute(text("ALTER TABLE scheduler_locks ADD COLUMN fencing_token INTEGER NOT NULL DEFAULT 1"))
+                conn.commit()
+                results["columns_added"].append("scheduler_locks.fencing_token")
+
+    return results
+
+
 def init_db() -> None:
-    """Initializes SQLite database tables."""
+    """Initializes SQLite database tables and applies safe idempotent migrations."""
     Base.metadata.create_all(bind=engine)
+    run_safe_migrations(engine)
 
 
 def get_db() -> Generator[Session, None, None]:

@@ -27,6 +27,7 @@ def aggregate_hourly_telemetry(
     db: Session,
     transformer_id: Optional[str] = None,
     reference_time: Optional[datetime] = None,
+    recompute_downstream: bool = True,
 ) -> Dict[str, Any]:
     """
     Scans raw telemetry, aggregates completed hours into arithmetic averages,
@@ -82,6 +83,7 @@ def aggregate_hourly_telemetry(
 
     records_created = 0
     records_updated = 0
+    updated_windows: List[Dict[str, Any]] = []
 
     for row in results:
         tid = row.transformer_id
@@ -118,6 +120,7 @@ def aggregate_hourly_telemetry(
             existing.hour_end = hour_end
             existing.aggregation_status = "completed"
             records_updated += 1
+            updated_windows.append({"transformer_id": tid, "hour_start": hour_start})
         else:
             # Insert newly finalized hourly record
             new_record = HourlyTelemetry(
@@ -140,6 +143,18 @@ def aggregate_hourly_telemetry(
 
     db.commit()
 
+    # Cascade downstream dependency recalculation for late-modified windows
+    cascade_results = []
+    if recompute_downstream and updated_windows:
+        from src.backend.scheduler import recalculate_downstream_dependencies
+        for uw in updated_windows:
+            c_res = recalculate_downstream_dependencies(
+                db=db,
+                transformer_id=uw["transformer_id"],
+                modified_hour=uw["hour_start"],
+            )
+            cascade_results.append(c_res)
+
     total_processed = records_created + records_updated
     msg = (
         f"Aggregated {total_processed} hourly records for completed windows "
@@ -151,6 +166,11 @@ def aggregate_hourly_telemetry(
         "status": "success",
         "records_created": records_created,
         "records_updated": records_updated,
+        "updated_windows": [
+            {"transformer_id": w["transformer_id"], "hour_start": w["hour_start"].isoformat()}
+            for w in updated_windows
+        ],
+        "cascade_recalculations": cascade_results,
         "total_processed": total_processed,
         "cutoff_time": cutoff.isoformat(),
         "message": msg,

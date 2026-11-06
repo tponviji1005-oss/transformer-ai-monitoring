@@ -74,11 +74,28 @@ class TestLiveInferenceService(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """Clean up test records."""
+        """Clean up test records and restore baseline hourly records."""
         db = SessionLocal()
         cls._clean_db(db)
         db.close()
         reset_transformer_specs()
+
+        # Restore baseline hourly records from backup if available
+        backup_path = os.path.join(settings.DATA_DIR, "backups", "transformer_monitoring_pre_stage5.db")
+        if os.path.exists(backup_path):
+            import sqlite3
+            src = sqlite3.connect(backup_path)
+            dst = sqlite3.connect(settings.DB_FILE)
+            src_c = src.cursor()
+            dst_c = dst.cursor()
+            rows = src_c.execute("SELECT * FROM hourly_telemetry").fetchall()
+            if rows:
+                cols = [d[0] for d in src_c.description]
+                placeholders = ",".join(["?" for _ in cols])
+                dst_c.executemany(f"INSERT OR REPLACE INTO hourly_telemetry ({','.join(cols)}) VALUES ({placeholders})", rows)
+                dst.commit()
+            src.close()
+            dst.close()
 
     @staticmethod
     def _clean_db(db):
